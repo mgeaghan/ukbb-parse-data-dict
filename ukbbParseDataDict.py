@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import pandas as pd
 
 
 class ukbbHtmlParser():
@@ -44,6 +45,7 @@ class ukbbHtmlParser():
         self.headingsAndTablesTags = [i.name for i in self.headingsAndTables]
         self.headingsAndTablesFormatted = [self.formatHeading(x) if (self.headingsAndTablesTags[i] in ["h1", "h3"]) else self.formatTable(x) for i, x in enumerate(self.headingsAndTables)]
         self.data = self.compileTables(self.headingsAndTablesFormatted, self.headingsAndTablesTags)
+        self.dataFrame = None
 
     def search(self, text):
         textTrack = {"data": [], "dataIdx": [], "tableIdx": [], "column": [], "rowIdx": []}
@@ -73,3 +75,10 @@ class ukbbHtmlParser():
     def searchPrint(self, text):
         textTrack = self.search(text)
         return(self.printRows(textTrack["dataIdx"], textTrack["tableIdx"], textTrack["rowIdx"]))
+
+    def tablesToPandas(self):
+        self.dataFrame = []
+        for d in self.data:
+            heading = d["heading"]
+            newTables = [pd.DataFrame.from_dict(t) for t in d["tables"]]
+            self.dataFrame.append({"heading": heading, "tables": newTables})
