@@ -37,6 +37,14 @@ class ukbbHtmlParser():
                 dataList[-1]["tables"].append(tableHeadingFormattedList[i])
         return dataList
 
+    def tablesToPandas(self, dataList):
+        newDataList = []
+        for d in dataList:
+            heading = d["heading"]
+            newTables = [pd.DataFrame.from_dict(t) for t in d["tables"]]
+            newDataList.append({"heading": heading, "tables": newTables})
+        return newDataList
+
     def __init__(self, file):
         with open(file, "r", errors="replace") as f:
             self.html = BeautifulSoup("".join(f.readlines()),
@@ -44,8 +52,7 @@ class ukbbHtmlParser():
         self.headingsAndTables = self.html.find_all(["h1", "h3", "table"])
         self.headingsAndTablesTags = [i.name for i in self.headingsAndTables]
         self.headingsAndTablesFormatted = [self.formatHeading(x) if (self.headingsAndTablesTags[i] in ["h1", "h3"]) else self.formatTable(x) for i, x in enumerate(self.headingsAndTables)]
-        self.data = self.compileTables(self.headingsAndTablesFormatted, self.headingsAndTablesTags)
-        self.dataFrame = None
+        self.data = self.tablesToPandas(self.compileTables(self.headingsAndTablesFormatted, self.headingsAndTablesTags))
 
     def search(self, text):
         textTrack = {"data": [], "dataIdx": [], "tableIdx": [], "column": [], "rowIdx": []}
@@ -75,10 +82,3 @@ class ukbbHtmlParser():
     def searchPrint(self, text):
         textTrack = self.search(text)
         return(self.printRows(textTrack["dataIdx"], textTrack["tableIdx"], textTrack["rowIdx"]))
-
-    def tablesToPandas(self):
-        self.dataFrame = []
-        for d in self.data:
-            heading = d["heading"]
-            newTables = [pd.DataFrame.from_dict(t) for t in d["tables"]]
-            self.dataFrame.append({"heading": heading, "tables": newTables})
