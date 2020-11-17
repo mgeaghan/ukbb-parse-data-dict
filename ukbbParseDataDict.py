@@ -82,3 +82,16 @@ class ukbbHtmlParser():
     def searchPrint(self, text):
         textTrack = self.search(text)
         return(self.printRows(textTrack["dataIdx"], textTrack["tableIdx"], textTrack["rowIdx"]))
+
+    def searchDataCoding(self, num):
+        return self.search("data-coding \n" + str(num) + "\n")
+
+    def searchPrintDataCoding(self, num):
+        textTrack = self.searchDataCoding(num)
+        return(self.printRows(textTrack["dataIdx"], textTrack["tableIdx"], textTrack["rowIdx"]))
+
+    def getDataByHeading(self, heading):
+        return [d for d in self.data if d["heading"] == heading]
+
+    def getDataByDataCoding(self, num):
+        return self.getDataByHeading("Data-Coding " + str(num))
