@@ -8,13 +8,18 @@ class ukbbHtmlParser():
         tmpHead = tmp[0]
         tmpRows = tmp[1:]
         header = [h.get_text() for h in tmpHead.find_all("th")]
-        rows = [[data.get_text("\n") for data in row.find_all("td")] for row in tmpRows]
+        rows = [
+            [data.get_text("\n") for data in row.find_all("td")]
+            for row in tmpRows
+        ]
         rowspan = []
         for i_tr, tr in enumerate(tmpRows):
             tmp = []
             for i_td, td in enumerate(tr.find_all("td")):
                 if "rowspan" in td.attrs:
-                    rowspan.append((i_tr, i_td, int(td["rowspan"]), td.get_text("\n")))
+                    rowspan.append(
+                        (i_tr, i_td, int(td["rowspan"]), td.get_text("\n"))
+                    )
         if len(rowspan) > 0:
             for i in rowspan:
                 for j in range(1, i[2]):
@@ -32,7 +37,10 @@ class ukbbHtmlParser():
         dataList = []
         for i, tag in enumerate(tableHeadingTagList):
             if tag in ["h1", "h3"]:
-                dataList.append({"heading": tableHeadingFormattedList[i], "tables": []})
+                dataList.append({
+                    "heading": tableHeadingFormattedList[i],
+                    "tables": []
+                })
             else:
                 dataList[-1]["tables"].append(tableHeadingFormattedList[i])
         return dataList
@@ -51,16 +59,36 @@ class ukbbHtmlParser():
                                       "html5lib")
         self.headingsAndTables = self.html.find_all(["h1", "h3", "table"])
         self.headingsAndTablesTags = [i.name for i in self.headingsAndTables]
-        self.headingsAndTablesFormatted = [self.formatHeading(x) if (self.headingsAndTablesTags[i] in ["h1", "h3"]) else self.formatTable(x) for i, x in enumerate(self.headingsAndTables)]
-        self.data = self.tablesToPandas(self.compileTables(self.headingsAndTablesFormatted, self.headingsAndTablesTags))
+        self.headingsAndTablesFormatted = [
+            self.formatHeading(x) if (
+                self.headingsAndTablesTags[i] in ["h1", "h3"]
+            )
+            else self.formatTable(x)
+            for i, x in enumerate(self.headingsAndTables)
+        ]
+        self.data = self.tablesToPandas(
+            self.compileTables(
+                self.headingsAndTablesFormatted,
+                self.headingsAndTablesTags
+            )
+        )
 
     def search(self, text):
-        textTrack = {"data": [], "dataIdx": [], "tableIdx": [], "column": [], "rowIdx": []}
+        textTrack = {
+            "data": [],
+            "dataIdx": [],
+            "tableIdx": [],
+            "column": [],
+            "rowIdx": []
+        }
         for di, d in enumerate(self.data):
             tables = d["tables"]
             for ti, t in enumerate(tables):
                 for col in t:
-                    textPos = [i for i, v in enumerate(t[col]) if text.lower() in v.lower()]
+                    textPos = [
+                        i for i, v in enumerate(t[col])
+                        if text.lower() in v.lower()
+                    ]
                     for i in textPos:
                         textTrack["data"].append(d["heading"])
                         textTrack["dataIdx"].append(di)
@@ -81,14 +109,22 @@ class ukbbHtmlParser():
 
     def searchPrint(self, text):
         textTrack = self.search(text)
-        return(self.printRows(textTrack["dataIdx"], textTrack["tableIdx"], textTrack["rowIdx"]))
+        return self.printRows(
+            textTrack["dataIdx"],
+            textTrack["tableIdx"],
+            textTrack["rowIdx"]
+        )
 
     def searchDataCoding(self, num):
         return self.search("data-coding \n" + str(num) + "\n")
 
     def searchPrintDataCoding(self, num):
         textTrack = self.searchDataCoding(num)
-        return(self.printRows(textTrack["dataIdx"], textTrack["tableIdx"], textTrack["rowIdx"]))
+        return self.printRows(
+            textTrack["dataIdx"],
+            textTrack["tableIdx"],
+            textTrack["rowIdx"]
+        )
 
     def getDataByHeading(self, heading):
         return [d for d in self.data if d["heading"] == heading]
