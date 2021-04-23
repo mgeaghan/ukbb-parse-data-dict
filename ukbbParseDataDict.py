@@ -3,7 +3,7 @@ import pandas as pd
 
 
 class ukbbHtmlParser():
-    def formatTable(self, table):
+    def _formatTable(self, table):
         tmp = table.find_all("tr")
         tmpHead = tmp[0]
         tmpRows = tmp[1:]
@@ -30,10 +30,10 @@ class ukbbHtmlParser():
                 tableDict[h].append(r[i])
         return tableDict
 
-    def formatHeading(self, heading):
+    def _formatHeading(self, heading):
         return heading.get_text()
 
-    def compileTables(self, tableHeadingFormattedList, tableHeadingTagList):
+    def _compileTables(self, tableHeadingFormattedList, tableHeadingTagList):
         dataList = []
         for i, tag in enumerate(tableHeadingTagList):
             if tag in ["h1", "h3"]:
@@ -45,7 +45,7 @@ class ukbbHtmlParser():
                 dataList[-1]["tables"].append(tableHeadingFormattedList[i])
         return dataList
 
-    def tablesToPandas(self, dataList):
+    def _tablesToPandas(self, dataList):
         newDataList = []
         for d in dataList:
             heading = d["heading"]
@@ -60,14 +60,14 @@ class ukbbHtmlParser():
         self.headingsAndTables = self.html.find_all(["h1", "h3", "table"])
         self.headingsAndTablesTags = [i.name for i in self.headingsAndTables]
         self.headingsAndTablesFormatted = [
-            self.formatHeading(x) if (
+            self._formatHeading(x) if (
                 self.headingsAndTablesTags[i] in ["h1", "h3"]
             )
-            else self.formatTable(x)
+            else self._formatTable(x)
             for i, x in enumerate(self.headingsAndTables)
         ]
-        self.data = self.tablesToPandas(
-            self.compileTables(
+        self.data = self._tablesToPandas(
+            self._compileTables(
                 self.headingsAndTablesFormatted,
                 self.headingsAndTablesTags
             )
