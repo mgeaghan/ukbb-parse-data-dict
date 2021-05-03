@@ -103,7 +103,8 @@ class ukbbHtmlParser():
     def searchByDataCoding(self, num, dataframe=True):
         return self.search(
             "data-coding \n" + str(num) + "\n",
-            dataframe=True)
+            dataframe=dataframe
+        )
 
     def getRows(self, searchResults):
         dataIdx = searchResults.dataIdx
@@ -133,5 +134,16 @@ class ukbbHtmlParser():
     def getTableByHeading(self, heading):
         return [d for d in self.data if d["heading"] == heading]
 
-    def getTableByDataCoding(self, num):
+    def getDataCoding(self, num):
         return self.getTableByHeading("Data-Coding " + str(num))
+
+    def prettyPrintDataCoding(self, dataCodingResults):
+        for d in dataCodingResults:
+            dataCoding = str(d['heading'])
+            print(dataCoding + ":\n")
+            for i, t in enumerate(d['tables']):
+                table = dataCoding + " | " + str(i)
+                print(table + ":\n")
+                print(t)
+                print("\n")
+            print("\n==========\n")
