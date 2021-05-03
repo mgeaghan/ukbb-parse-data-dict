@@ -73,7 +73,7 @@ class ukbbHtmlParser():
             )
         )
 
-    def search(self, text):
+    def search(self, text, dataframe=True):
         textTrack = {
             "data": [],
             "dataIdx": [],
@@ -95,39 +95,43 @@ class ukbbHtmlParser():
                         textTrack["tableIdx"].append(ti)
                         textTrack["column"].append(col)
                         textTrack["rowIdx"].append(i)
-        return textTrack
+        if dataframe:
+            return pd.DataFrame(textTrack)
+        else:
+            return textTrack
 
-    def printRows(self, dataIdx, tableIdx, rowIdx):
-        rows = []
-        for i, v in enumerate(dataIdx):
-            table = self.data[v]["tables"][tableIdx[i]]
-            row = []
-            for col in table:
-                row.append(table[col][rowIdx[i]])
-            rows.append(row)
-        return rows
+    def searchByDataCoding(self, num, dataframe=True):
+        return self.search(
+            "data-coding \n" + str(num) + "\n",
+            dataframe=True)
 
-    def searchPrint(self, text):
-        textTrack = self.search(text)
-        return self.printRows(
-            textTrack["dataIdx"],
-            textTrack["tableIdx"],
-            textTrack["rowIdx"]
-        )
+    def getRows(self, searchResults):
+        dataIdx = searchResults.dataIdx
+        tableIdx = searchResults.tableIdx
+        tables = {}
+        uniqe_tables = list(set([t for t in zip([*dataIdx], [*tableIdx])]))
+        for d, t in uniqe_tables:
+            sub_searchResults = searchResults[
+                (searchResults.dataIdx == d) &
+                (searchResults.tableIdx == t)
+            ]
+            rows = sub_searchResults.rowIdx
+            name = (
+                [*sub_searchResults.data][0] +
+                " | " +
+                str([*sub_searchResults.tableIdx][0])
+            )
+            tables[name] = self.data[d]['tables'][t].iloc[rows]
+        return tables
 
-    def searchDataCoding(self, num):
-        return self.search("data-coding \n" + str(num) + "\n")
+    def prettyPrintRows(self, rows):
+        for k in rows.keys():
+            print(str(k) + ":\n")
+            print(rows[k])
+            print("\n==========\n")
 
-    def searchPrintDataCoding(self, num):
-        textTrack = self.searchDataCoding(num)
-        return self.printRows(
-            textTrack["dataIdx"],
-            textTrack["tableIdx"],
-            textTrack["rowIdx"]
-        )
-
-    def getDataByHeading(self, heading):
+    def getTableByHeading(self, heading):
         return [d for d in self.data if d["heading"] == heading]
 
-    def getDataByDataCoding(self, num):
-        return self.getDataByHeading("Data-Coding " + str(num))
+    def getTableByDataCoding(self, num):
+        return self.getTableByHeading("Data-Coding " + str(num))
